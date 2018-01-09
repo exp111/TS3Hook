@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iterator>
 #include <fstream>
+#include <time.h>
 
 #ifdef ENV32
 #define STD_DECL __cdecl
@@ -80,6 +81,16 @@ bool file_exists(LPCWSTR fileName)
 {
 	std::ifstream file(fileName);
 	return file.good();
+}
+
+wchar_t* get_timestamp()
+{
+	time_t ltime; /* calendar time */
+	struct tm *Tm;
+	ltime = time(NULL); /* get current cal time */
+	wchar_t* time = _wasctime(localtime(&ltime)); //unsafe & we don't get milliseconds
+	time[lstrlenW(time) - 1] = 0; //remove the \n which gets added by asctime
+	return time;
 }
 
 void create_config(LPCWSTR fileName)
@@ -157,7 +168,7 @@ void STD_DECL log_in_packet(char* packet, int length)
 	}
 	if (hConsole != nullptr)
 		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-	printf("%ls %.*s %ls\n", inprefix, length, packet, insuffix);
+	printf("<%ls> %ls %.*s %ls\n", get_timestamp(), inprefix, length, packet, insuffix);
 }
 
 void STD_DECL log_out_packet(char* packet, int length)
@@ -169,7 +180,7 @@ void STD_DECL log_out_packet(char* packet, int length)
 	}
 	if (hConsole != nullptr)
 		SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-	printf("%ls %.*s %ls\n", outprefix, length, packet, outsuffix);
+	printf("<%ls> %ls %.*s %ls\n", get_timestamp(), outprefix, length, packet, outsuffix);
 }
 
 #ifdef ENV32
